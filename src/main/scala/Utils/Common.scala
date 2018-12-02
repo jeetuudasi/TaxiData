@@ -5,8 +5,8 @@ import org.apache.spark.sql.functions._
 
 object Common {
 
-  def datediffinminutes(column1: Column, column2: Column): Column = {
-    return (unix_timestamp(column1) - unix_timestamp(column2) )/60
+  def dateDiffInMinutes(column1: Column, column2: Column): Column = {
+    return (unix_timestamp(column1) - unix_timestamp(column2))/60
   }
 
 }

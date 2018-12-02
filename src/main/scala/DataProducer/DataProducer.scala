@@ -31,7 +31,6 @@ class DataProducer {
   }
 
 
-
   def preProcessDemand(input: Dataset[Row]): Dataset[Row] ={
     return input
               .select(
@@ -40,7 +39,7 @@ class DataProducer {
                 ,col("trip_distance").as("trip_distance")
                 ,col("tpep_dropoff_datetime")
               )
-              .withColumn("trip_time", Common.datediffinminutes(col("tpep_dropoff_datetime"),col("event_time")) )
+              .withColumn("trip_time", Common.dateDiffInMinutes(col("tpep_dropoff_datetime"),col("event_time")) )
               .drop(col("tpep_dropoff_datetime"))
   }
 
@@ -51,14 +50,26 @@ class DataProducer {
         .select("a.*","latitude","longitude","geo_hash")
   }
 
+  def writeToKafka(input: Dataset[Row], topic: String, kafkaServers: String): Unit ={
+    input.withColumn("value", (to_json(struct("*"))))
+      .withColumn("key",col("geo_hash"))
+      .select("key","value")
+      .write
+      .format("kafka")
+      .option("kafka.bootstrap.servers", kafkaServers)
+      .option("topic", topic)
+      .save()
+  }
+
   def startProcess(): Unit ={
 
     val sourceFile = readFromCSV(Configs.inputLocation)
 
     val supplyDf = addLocationInfo(preProcessSupply(sourceFile))
-    val DemandDf = addLocationInfo(preProcessDemand(sourceFile))
+    val demandDf = addLocationInfo(preProcessDemand(sourceFile))
 
-
+    writeToKafka(supplyDf,Configs.supplyTopic,Configs.kafkaServers)
+    writeToKafka(demandDf,Configs.demandTopic,Configs.kafkaServers)
 
     }
 

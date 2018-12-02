@@ -1,7 +1,10 @@
+import DataProducer.DataProducer
+
 object ContextMain {
 
   def main(args: Array[String]): Unit = {
-    print("Hello")
+    val dp = new DataProducer();
+    dp.startProcess();
   }
 
 }
