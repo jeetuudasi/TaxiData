@@ -50,26 +50,26 @@ class DataProducer {
         .select("a.*","latitude","longitude","geo_hash")
   }
 
-  def writeToKafka(input: Dataset[Row], topic: String, kafkaServers: String): Unit ={
+  def writeToKafka(input: Dataset[Row], topic: String): Unit ={
     input.withColumn("value", (to_json(struct("*"))))
       .withColumn("key",col("geo_hash"))
       .select("key","value")
       .write
       .format("kafka")
-      .option("kafka.bootstrap.servers", kafkaServers)
+      .option("kafka.bootstrap.servers", Configs.kafkaServers)
       .option("topic", topic)
       .save()
   }
 
   def startProcess(): Unit ={
 
-    val sourceFile = readFromCSV(Configs.inputLocation)
+      val sourceFile = readFromCSV(Configs.inputLocation)
 
-    val supplyDf = addLocationInfo(preProcessSupply(sourceFile))
-    val demandDf = addLocationInfo(preProcessDemand(sourceFile))
+      val supplyDf = addLocationInfo(preProcessSupply(sourceFile))
+      val demandDf = addLocationInfo(preProcessDemand(sourceFile))
 
-    writeToKafka(supplyDf,Configs.supplyTopic,Configs.kafkaServers)
-    writeToKafka(demandDf,Configs.demandTopic,Configs.kafkaServers)
+      writeToKafka(supplyDf,Configs.supplyTopic)
+      writeToKafka(demandDf,Configs.demandTopic)
 
     }
 
